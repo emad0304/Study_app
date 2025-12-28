@@ -17,11 +17,11 @@ jobs:
 
       - name: Build APK
         run: |
-          # استفاده از دستور yes برای پاسخ خودکار به سوالات نصب Flutter
+          # این دستور تمام سوالات نصب را به صورت خودکار تایید می‌کند
           yes | flet build apk study.py
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: StudyApp-Final-APK
+          name: StudyApp-Final
           path: build/apk/*.apk
