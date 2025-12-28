@@ -17,8 +17,8 @@ jobs:
 
       - name: Build APK
         run: |
-          # حذف --main برای سازگاری با ورژن جدید Flet 0.80.0
-          flet build apk study.py
+          # استفاده از دستور yes برای پاسخ خودکار به سوالات نصب Flutter
+          yes | flet build apk study.py
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
