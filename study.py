@@ -29,59 +29,85 @@ class StudyApp:
         page.title = "دستیار مطالعه هوشمند"
         page.rtl = True
         page.theme_mode = ft.ThemeMode.LIGHT
-        page.window_width = 450
-        page.window_height = 850
+        # تنظیمات فونت برای اندروید اصلاح شد
+        page.theme = ft.Theme(font_family="sans-serif")
         page.scroll = ft.ScrollMode.AUTO
-        page.theme = ft.Theme(font_family="Tahoma")
 
         # ورودی‌ها
         sub_input = ft.TextField(label="نام درس", width=250)
-        coeff_input = ft.TextField(label="ضریب", value="1", width=70, text_align=ft.TextAlign.CENTER)
-        time_input = ft.TextField(label="زمان (دقیقه)", width=120, text_align=ft.TextAlign.CENTER)
-        tot_input = ft.TextField(label="کل تست", value="0", width=80)
-        cor_input = ft.TextField(label="صحیح", value="0", width=80)
-        wro_input = ft.TextField(label="غلط", value="0", width=80)
+        coeff_input = ft.TextField(label="ضریب", value="1", width=70, text_align=ft.TextAlign.CENTER, keyboard_type=ft.KeyboardType.NUMBER)
+        time_input = ft.TextField(label="زمان (دقیقه)", width=120, text_align=ft.TextAlign.CENTER, keyboard_type=ft.KeyboardType.NUMBER)
+        tot_input = ft.TextField(label="کل تست", value="0", width=80, keyboard_type=ft.KeyboardType.NUMBER)
+        cor_input = ft.TextField(label="صحیح", value="0", width=80, keyboard_type=ft.KeyboardType.NUMBER)
+        wro_input = ft.TextField(label="غلط", value="0", width=80, keyboard_type=ft.KeyboardType.NUMBER)
         
         timer_text = ft.Text("00:00:00", size=50, color="red", weight="bold")
         log_column = ft.Column(spacing=10)
 
         def timer_thread():
             while self.running:
-                self.elapsed_seconds = int(time.time() - self.start_time)
-                h, m, s = self.elapsed_seconds // 3600, (self.elapsed_seconds % 3600) // 60, self.elapsed_seconds % 60
-                timer_text.value = f"{h:02d}:{m:02d}:{s:02d}"
-                page.update()
-                time.sleep(1)
+                try:
+                    self.elapsed_seconds = int(time.time() - self.start_time)
+                    h, m, s = self.elapsed_seconds // 3600, (self.elapsed_seconds % 3600) // 60, self.elapsed_seconds % 60
+                    timer_text.value = f"{h:02d}:{m:02d}:{s:02d}"
+                    page.update()
+                    time.sleep(1)
+                except: break
 
         def start_study(e):
             if not sub_input.value:
-                page.snack_bar = ft.SnackBar(ft.Text("نام درس را وارد کنید")); page.snack_bar.open = True; page.update(); return
-            self.running = True; self.start_time = time.time()
-            btn_start.disabled = True; btn_stop.disabled = False; page.update()
-            threading.Thread(target=timer_thread, daemon=True).start()
+                page.snack_bar = ft.SnackBar(ft.Text("نام درس را وارد کنید"))
+                page.snack_bar.open = True
+                page.update()
+                return
+            self.running = True
+            self.start_time = time.time()
+            btn_start.disabled = True
+            btn_stop.disabled = False
+            page.update()
+            thread = threading.Thread(target=timer_thread, daemon=True)
+            thread.start()
 
         def stop_study(e):
-            self.running = False; btn_start.disabled = False; btn_stop.disabled = True
-            time_input.value = str(max(1, self.elapsed_seconds // 60)); page.update()
+            self.running = False
+            btn_start.disabled = False
+            btn_stop.disabled = True
+            time_input.value = str(max(1, self.elapsed_seconds // 60))
+            page.update()
 
-        btn_start = ft.ElevatedButton("شروع", on_click=start_study, bgcolor="green", color="white")
-        btn_stop = ft.ElevatedButton("توقف", on_click=stop_study, bgcolor="red", color="white", disabled=True)
+        btn_start = ft.ElevatedButton("شروع مطالعه", on_click=start_study, bgcolor="green", color="white")
+        btn_stop = ft.ElevatedButton("توقف تایمر", on_click=stop_study, bgcolor="red", color="white", disabled=True)
 
         def save_data(e):
             try:
-                s, coef = sub_input.value, float(coeff_input.value)
-                d, t, c, w = int(time_input.value), int(tot_input.value), int(cor_input.value), int(wro_input.value)
-                # ثبت تاریخ دقیق
+                s = sub_input.value
+                coef = float(coeff_input.value)
+                d = int(time_input.value)
+                t = int(tot_input.value)
+                c = int(cor_input.value)
+                w = int(wro_input.value)
+                
                 date_str = datetime.now().strftime("%Y-%m-%d")
                 with open(self.filename, mode='a', newline='', encoding='utf-16') as f:
                     writer = csv.writer(f, delimiter='\t')
                     writer.writerow([date_str, datetime.now().strftime("%H:%M"), s, d, t, c, w, coef])
                 
                 load_logs()
-                sub_input.value = ""; time_input.value = ""; tot_input.value="0"; cor_input.value="0"; wro_input.value="0"; coeff_input.value="1"
+                # ریست کردن فیلدها
+                sub_input.value = ""
+                time_input.value = "0"
+                tot_input.value = "0"
+                cor_input.value = "0"
+                wro_input.value = "0"
+                coeff_input.value = "1"
                 timer_text.value = "00:00:00"
-                page.snack_bar = ft.SnackBar(ft.Text("با موفقیت ثبت شد ✅")); page.snack_bar.open = True; page.update()
-            except: page.snack_bar = ft.SnackBar(ft.Text("خطا در ورود اطلاعات!")); page.snack_bar.open = True; page.update()
+                page.snack_bar = ft.SnackBar(ft.Text("با موفقیت ثبت شد ✅"))
+                page.snack_bar.open = True
+                page.update()
+            except Exception as ex:
+                page.snack_bar = ft.SnackBar(ft.Text(f"خطا در ذخیره سازی!"))
+                page.snack_bar.open = True
+                page.update()
 
         def load_logs():
             log_column.controls.clear()
@@ -93,12 +119,10 @@ class StudyApp:
                             p = self.calculate_percent_raw(r[4], r[5], r[6])
                             p_str = f"منفی {abs(p):.1f}%" if p < 0 else f"{p:.1f}%"
                             t_fmt = self.format_minutes_to_hrs(r[3])
-                            # نمایش تاریخ در لیست اصلی
-                            date_display = r[0] 
                             log_column.controls.append(ft.Container(
                                 content=ft.Column([
-                                    ft.Text(f"📅 {date_display}", size=11, color="grey700"),
-                                    ft.Text(f"📘 {r[2]} ({t_fmt}) | 🎯 {p_str}", size=14, weight="w500"),
+                                    ft.Text(f"تاریخ: {r[0]}", size=11, color="grey700"),
+                                    ft.Text(f"درس: {r[2]} ({t_fmt}) | درصد: {p_str}", size=14, weight="w500"),
                                 ], spacing=2),
                                 bgcolor="blue50", padding=10, border_radius=8))
             page.update()
@@ -114,7 +138,10 @@ class StudyApp:
                                 sub, dur, tot, c, w = r[2], int(r[3]), int(r[4]), int(r[5]), int(r[6])
                                 coef = float(r[7]) if len(r) > 7 else 1.0
                                 if sub not in summary: summary[sub] = {'t':0, 'tot':0, 'c':0, 'w':0, 'coef': coef}
-                                summary[sub]['t'] += dur; summary[sub]['tot'] += tot; summary[sub]['c'] += c; summary[sub]['w'] += w
+                                summary[sub]['t'] += dur
+                                summary[sub]['tot'] += tot
+                                summary[sub]['c'] += c
+                                summary[sub]['w'] += w
                         except: continue
 
             report_list = ft.Column(scroll=ft.ScrollMode.ALWAYS, height=400, spacing=10)
@@ -124,25 +151,34 @@ class StudyApp:
                 p_str = f"منفی {abs(p):.1f}%" if p < 0 else f"{p:.1f}%"
                 report_list.controls.append(ft.Container(
                     content=ft.Column([
-                        ft.Text(f"📘 {sub} (ضریب: {d['coef']})", weight="bold", size=16),
-                        ft.Text(f"⏱ زمان: {self.format_minutes_to_hrs(d['t'])} | 🎯 درصد: {p_str}"),
-                        ft.Text(f"📈 نمره وزنی: {weighted_score:.1f}", color="blue", weight="bold")
+                        ft.Text(f"درس: {sub} (ضریب: {d['coef']})", weight="bold", size=16),
+                        ft.Text(f"زمان کل: {self.format_minutes_to_hrs(d['t'])} | درصد: {p_str}"),
+                        ft.Text(f"نمره وزنی: {weighted_score:.1f}", color="blue", weight="bold")
                     ], spacing=2), padding=10, border=ft.border.all(1, "grey300"), border_radius=10))
 
-            dlg = ft.AlertDialog(title=ft.Text(f"گزارش {days} روزه"), content=ft.Container(content=report_list, width=400),
-                                 actions=[ft.TextButton("بستن", on_click=lambda _: setattr(dlg, "open", False) or page.update())])
-            page.overlay.append(dlg); dlg.open = True; page.update()
+            dlg = ft.AlertDialog(
+                title=ft.Text(f"گزارش {days} روزه"),
+                content=ft.Container(content=report_list, width=400),
+                actions=[ft.TextButton("بستن", on_click=lambda _: setattr(dlg, "open", False) or page.update())]
+            )
+            page.overlay.append(dlg)
+            dlg.open = True
+            page.update()
 
         page.add(ft.Column([
-            ft.Text("دستیار کنکور حرفه‌ای", size=25, weight="bold", color="blue"),
-            timer_text, ft.Row([btn_start, btn_stop], alignment=ft.MainAxisAlignment.CENTER),
+            ft.Text("دستیار مطالعه و تست", size=25, weight="bold", color="blue"),
+            timer_text, 
+            ft.Row([btn_start, btn_stop], alignment=ft.MainAxisAlignment.CENTER),
+            ft.Divider(),
             ft.Row([sub_input, coeff_input], alignment=ft.MainAxisAlignment.CENTER),
             ft.Row([time_input, ft.Text("دقیقه")], alignment=ft.MainAxisAlignment.CENTER),
             ft.Row([tot_input, cor_input, wro_input], alignment=ft.MainAxisAlignment.CENTER),
-            ft.ElevatedButton("📥 ثبت و نمایش آنی", on_click=save_data, bgcolor="blue", color="white", width=200, height=40),
-            ft.Row([ft.ElevatedButton("گزارش ۷ روزه", on_click=lambda _: show_report(7)), 
-                    ft.ElevatedButton("گزارش ۳۰ روزه", on_click=lambda _: show_report(30))], alignment=ft.MainAxisAlignment.CENTER),
-            ft.Text("📝 سوابق مطالعه (با تاریخ)", weight="bold"),
+            ft.ElevatedButton("ذخیره اطلاعات", on_click=save_data, bgcolor="blue", color="white", width=200, height=45),
+            ft.Row([
+                ft.ElevatedButton("گزارش ۷ روزه", on_click=lambda _: show_report(7)), 
+                ft.ElevatedButton("گزارش ۳۰ روزه", on_click=lambda _: show_report(30))
+            ], alignment=ft.MainAxisAlignment.CENTER),
+            ft.Text("آخرین فعالیت‌ها", weight="bold"),
             log_column
         ], horizontal_alignment=ft.CrossAxisAlignment.CENTER))
         load_logs()
