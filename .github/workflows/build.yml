@@ -1,0 +1,27 @@
+name: Build APK
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install Flet
+        run: pip install flet
+
+      - name: Build APK
+        run: |
+          # چون نام فایل تو study.py هست، اینجا مشخصش می‌کنیم
+          flet build apk --main study.py
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: StudyApp-Android
+          path: build/apk/*.apk
