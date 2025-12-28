@@ -80,12 +80,13 @@ class StudyApp:
 
         def save_data(e):
             try:
-                s = sub_input.value
-                coef = float(coeff_input.value)
-                d = int(time_input.value)
-                t = int(tot_input.value)
-                c = int(cor_input.value)
-                w = int(wro_input.value)
+                # تبدیل صریح ورودی‌ها به عدد برای جلوگیری از ارور مقایسه
+                s = str(sub_input.value)
+                coef = float(coeff_input.value or 1)
+                d = int(time_input.value or 0)
+                t = int(tot_input.value or 0)
+                c = int(cor_input.value or 0)
+                w = int(wro_input.value or 0)
                 
                 date_str = datetime.now().strftime("%Y-%m-%d")
                 with open(self.filename, mode='a', newline='', encoding='utf-16') as f:
@@ -185,3 +186,4 @@ class StudyApp:
 
 if __name__ == "__main__":
     ft.app(target=StudyApp().main)
+
