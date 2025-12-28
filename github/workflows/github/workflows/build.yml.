@@ -17,11 +17,11 @@ jobs:
 
       - name: Build APK
         run: |
-          # تغییر اصلی: حذف --main برای سازگاری با ورژن جدید
+          # حذف --main برای سازگاری با ورژن جدید Flet 0.80.0
           flet build apk study.py
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: my-study-app
+          name: StudyApp-Final-APK
           path: build/apk/*.apk
